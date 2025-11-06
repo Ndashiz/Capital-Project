@@ -1,40 +1,45 @@
-import { defineConfig } from "vite";
+import { defineConfig, type PluginOption } from "vite";
 import react from "@vitejs/plugin-react-swc";
-import path from "path";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { componentTagger } from "lovable-tagger";
 
+// __dirname en ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
-  // Nom exact du repo → important pour GitHub Pages
-  base: "/capital-pintcheke-time/",
-
-  server: {
-    host: "::",
-    port: 8080,
-  },
-
-  plugins: [
+export default defineConfig(({ mode }) => {
+  const plugins: PluginOption[] = [
     react(),
-    // Tagger utile seulement en dev
-    mode === "development" && componentTagger(),
-  ].filter(Boolean),
+    ...(mode === "development" ? [componentTagger()] : []), // uniquement en dev
+  ];
 
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
+  return {
+    // Nom exact du repo → important pour GitHub Pages
+    base: "/capital-pintcheke-time/",
+
+    server: {
+      host: "::",
+      port: 8080,
     },
-  },
 
-  build: {
-    // ✅ Génère les sourcemaps pour déboguer les erreurs minifiées
-    sourcemap: true,
-    // (optionnel) assure que les assets soient dans le bon dossier
-    assetsDir: "assets",
-    // (optionnel) plus lisible lors de debug sur Pages
-    rollupOptions: {
-      output: {
-        manualChunks: undefined,
+    plugins,
+
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
       },
     },
-  },
-}));
+
+    build: {
+      sourcemap: true,
+      assetsDir: "assets",
+      rollupOptions: {
+        output: {
+          manualChunks: undefined,
+        },
+      },
+    },
+  };
+});
